@@ -260,7 +260,17 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 		c.logf("Preflight aborted: method '%s' not allowed", reqMethod)
 		return
 	}
-	reqHeaders := parseHeaderList(r.Header.Get("Access-Control-Request-Headers"))
+
+	headerVals := r.Header.Values("Access-Control-Request-Headers")
+
+	c.logf("Preflight access control request headers: %v", headerVals)
+
+	var reqHeaders []string
+
+	for _, headerVal := range headerVals {
+		parsed := parseHeaderList(headerVal)
+		reqHeaders = append(reqHeaders, parsed...)
+	}
 	if !c.areHeadersAllowed(reqHeaders) {
 		c.logf("Preflight aborted: headers '%v' not allowed", reqHeaders)
 		return

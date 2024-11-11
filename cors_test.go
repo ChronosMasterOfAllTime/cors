@@ -297,7 +297,7 @@ func TestSpec(t *testing.T) {
 				"Access-Control-Allow-Methods": "GET",
 				"Access-Control-Allow-Headers": "X-Header-2, X-Header-1",
 			},
-			false,
+			true,
 		},
 		{
 			"DefaultAllowedHeaders",

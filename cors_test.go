@@ -280,6 +280,26 @@ func TestSpec(t *testing.T) {
 			false,
 		},
 		{
+			"AllowedHeadersNoSpacesLowercasePreParsed",
+			Options{
+				AllowedOrigins: []string{"http://foobar.com"},
+				AllowedHeaders: []string{"X-Header-1", "x-header-2"},
+			},
+			"OPTIONS",
+			map[string]string{
+				"Origin":                         "http://foobar.com",
+				"Access-Control-Request-Method":  "GET",
+				"Access-Control-Request-Headers": "x-header-2,x-header-1",
+			},
+			map[string]string{
+				"Vary":                         "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+				"Access-Control-Allow-Origin":  "http://foobar.com",
+				"Access-Control-Allow-Methods": "GET",
+				"Access-Control-Allow-Headers": "X-Header-2, X-Header-1",
+			},
+			false,
+		},
+		{
 			"DefaultAllowedHeaders",
 			Options{
 				AllowedOrigins: []string{"http://foobar.com"},
@@ -421,7 +441,7 @@ func TestSpec(t *testing.T) {
 				"Vary":                        "Origin",
 				"Access-Control-Allow-Origin": "http://foobar.com",
 			},
-			true,
+			false,
 		},
 	}
 	for i := range cases {
@@ -431,11 +451,10 @@ func TestSpec(t *testing.T) {
 
 			req, _ := http.NewRequest(tc.method, "http://example.com/foo", nil)
 			for name, value := range tc.reqHeaders {
-				if name == "Access-Control-Request-Headers" && tc.preSplitHeaders {
-					parsed := parseHeaderList(value)
-
+				if strings.EqualFold(name, "Access-Control-Request-Headers") && tc.preSplitHeaders {
+					parsed := strings.Split(value, ",")
 					for _, v := range parsed {
-						req.Header.Add(name, v)
+						req.Header.Add(strings.TrimSpace(name), v)
 					}
 					continue
 				}

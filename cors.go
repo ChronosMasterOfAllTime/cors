@@ -3,15 +3,15 @@
 //
 // You can configure it by passing an option struct to cors.New:
 //
-//     c := cors.New(cors.Options{
-//         AllowedOrigins: []string{"foo.com"},
-//         AllowedMethods: []string{"GET", "POST", "DELETE"},
-//         AllowCredentials: true,
-//     })
+//	c := cors.New(cors.Options{
+//	    AllowedOrigins: []string{"foo.com"},
+//	    AllowedMethods: []string{"GET", "POST", "DELETE"},
+//	    AllowCredentials: true,
+//	})
 //
 // Then insert the handler in the chain:
 //
-//     handler = c.Handler(handler)
+//	handler = c.Handler(handler)
 //
 // See Options documentation for more options.
 //
@@ -261,12 +261,18 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// We need to call Values func instead of Get because the header might
+	// be parsed/split before it reaches the handler. Calling "Get" will only
+	// return the first value This guarantees that we get all values of
+	// the header and maintains the original functionality.
 	headerVals := r.Header.Values("Access-Control-Request-Headers")
 
 	c.logf("Preflight access control request headers: %v", headerVals)
 
 	var reqHeaders []string
 
+	// loop over the header values and parse them; this will allow us to handle
+	// the case where it's a single comma separated header or multiple headers
 	for _, headerVal := range headerVals {
 		parsed := parseHeaderList(headerVal)
 		reqHeaders = append(reqHeaders, parsed...)
